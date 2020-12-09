@@ -23,6 +23,7 @@ let door_activate_millis = Cfg.get('garage.door_activate_millis');
 // homie topic root
 let tr = 'homie/' + device_id + '/';
 
+print('homie setup starting');
 MQTT.pub(tr + '$homie', "4.0");
 MQTT.pub(tr + '$name', nm);
 MQTT.pub(tr + '$state', 'init');
@@ -66,6 +67,7 @@ MQTT.pub(tr + 'north_door/open/$settable', 'false');
 MQTT.pub(tr + 'north_door/open/$datatype', 'boolean');
 
 MQTT.pub(tr + '$state', 'ready');
+print('homie setup finished');
 
 // Garage relay is activated by shorting to ground
 GPIO.set_pull(s_door_activate, GPIO.PULL_UP);
@@ -125,9 +127,9 @@ Timer.set(1000, true, function() {
     MQTT.pub(tr + 'dht22/tempf', JSON.stringify(tempF));
 
     let v = GPIO.read(s_door_contact);
-    MQTT.pub(tr + 'south_door/open', v == 0 ? 'false' : 'true');
+    MQTT.pub(tr + 'south_door/open', v === 0 ? 'false' : 'true');
     v = GPIO.read(n_door_contact);
-    MQTT.pub(tr + 'north_door/open', v == 0 ? 'false' : 'true');
+    MQTT.pub(tr + 'north_door/open', v === 0 ? 'false' : 'true');
   }
 }, null);
 
