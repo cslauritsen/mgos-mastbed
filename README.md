@@ -1,7 +1,10 @@
-# A blank Mongoose OS app
+# Garage Mongoose OS app
 
 ## Overview
 
-This is an empty app, serves as a skeleton for building Mongoose OS
-apps from scratch.
-
+Features:
+ * relay cycle control for garage door opening
+ * DHT22 temp/humidity readings
+ * MQTT publishing
+ * HTTP/MQTT RPC Control
+ * Second relay control for lights
