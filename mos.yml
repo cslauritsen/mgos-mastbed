@@ -24,6 +24,7 @@ filesystem:
 
 
 config_schema:
+  - ["project.name", "s", "garage", {title: "Project Name"}]
   - ["garage", "o", {title: "My app custom settings"}]
   - ["garage.bool_value", "b", false, {title: "Some boolean value"}]
   - ["garage.string_value", "s", "", {title: "Some string value"}]
