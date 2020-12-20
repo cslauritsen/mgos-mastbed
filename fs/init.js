@@ -156,35 +156,6 @@ for (let i=0; i < cpins.length; i++) {
   GPIO.enable_int(cp.pin); 
 }
 
-/*
-GPIO.set_pull(n_door_contact, GPIO.PULL_UP);
-GPIO.set_mode(n_door_contact, GPIO.MODE_INPUT);
-let n_door_reading = GPIO.read(n_door_contact);
-MQTT.pub(tr + 'north-door/open', n_door_reading === 0 ? 'false' : 'true');
-GPIO.set_int_handler(n_door_contact, GPIO.INT_EDGE_ANY, function(pin) {
-  let v = GPIO.read(pin);
-  if (v !== n_door_reading) {
-    print('Pin', pin, 'got north door interrupt: ', v);
-    MQTT.pub(tr + 'north-door/open', v === 0 ? 'false' : 'true');
-  }
-  n_door_reading = v;
-}, null);
-GPIO.enable_int(n_door_contact); 
-
-GPIO.set_pull(s_door_contact, GPIO.PULL_UP);
-GPIO.set_mode(s_door_contact, GPIO.MODE_INPUT);
-let s_door_reading = GPIO.read(s_door_contact);
-GPIO.set_int_handler(s_door_contact, GPIO.INT_EDGE_ANY, function(pin) {
-   let v = GPIO.read(pin);
-   if (v !== s_door_reading) {
-    print('Pin', pin, 'got south door interrupt: ', v);
-    MQTT.pub(tr + 'south-door/open', v === 0 ? 'false' : 'true');
-   }
-   s_door_reading = v;
-}, null);
-GPIO.enable_int(s_door_contact);
-*/
-
 Timer.set(1000, true, function() {
   if (device_id === "unknown") {
     RPC.call(RPC.LOCAL, 'Sys.GetInfo', null, function(resp, ud) {
