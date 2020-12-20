@@ -4,10 +4,16 @@ load('api_rpc.js');
 load('api_dht.js');
 load('api_timer.js');
 load('api_sensor_utils.js');
-load('api_mqtt.js');
 load('api_adc.js');
 
-let device_id = Cfg.get('device.id');
+let device_id = Cfg.get('project.name');
+let device_ip = "unknown";
+
+// homie topic root
+let tr = 'homie/' + device_id + '/';
+Cfg.set({mqtt: {will_topic: tr + '$state'}});
+load('api_mqtt.js');
+
 let nm = Cfg.get('project.name');
 let dht_pin = Cfg.get('garage.dht_pin');
 print('dht_pin:', dht_pin);
@@ -18,71 +24,148 @@ let counter = 0;
 let n_door_contact = Cfg.get('garage.north_door_contact');
 let s_door_contact = Cfg.get('garage.south_door_contact');
 let s_door_activate = Cfg.get('garage.south_door_activation_pin');
-let door_activate_millis = Cfg.get('garage.door_activate_millis');
 
-// homie topic root
-let tr = 'homie/' + device_id + '/';
+/**
+ * Implementation of how to trigger the door opener relay
+ */
+function activate_door_south() {
+  GPIO.write(s_door_activate, 0);
+  // Toggle the pin after the activation interval
+  let wait = Cfg.get('garage.door_activate_millis');
+  Timer.set(wait, 0, function() {
+    GPIO.write(s_door_activate, 1);
+    print('Activate state off');
+  }, null);
+}
 
-print('homie setup starting');
-MQTT.pub(tr + '$homie', "4.0");
-MQTT.pub(tr + '$name', nm);
-MQTT.pub(tr + '$state', 'init');
-MQTT.pub(tr + '$implementation', 'esp8266');
-MQTT.pub(tr + '$nodes', 'dht22,south_door,north_door');
+let mgos_mqtt_num_unsent_bytes = ffi('int mgos_mqtt_num_unsent_bytes(void)');
 
-MQTT.pub(tr + 'dht22/$name', 'DHT22 Temp & Humidity Sensor');
-MQTT.pub(tr + 'dht22/$type', 'DHT22');
-MQTT.pub(tr + 'dht22/$properties', 'tempc,tempf,rh');
+let homie_setup_msgs = [
+  {t: tr + '$homie', m: "4.0", qos: 1, retain: true},
+  {t: tr + '$name',  m:nm, qos: 1, retain: true},
+  {t: tr + '$state',  m:'init', qos: 1, retain: true},
+  {t: tr + '$nodes',  m:'dht22,south-door,north-door,ip', qos: 1, retain: true},
 
-MQTT.pub(tr + 'dht22/tempf/$name', 'Temperature in Fahrenheit');
-MQTT.pub(tr + 'dht22/tempf/$datatype', 'float');
-MQTT.pub(tr + 'dht22/tempf/$settable', 'false');
-MQTT.pub(tr + 'dht22/tempf/$unit', '°F');
+  {t: tr + 'ip/$name',  m:'Device IP Config', qos: 1, retain: true},
+  {t: tr + 'ip/$properties',  m:'address', qos: 1, retain: true},
 
-MQTT.pub(tr + 'dht22/tempc/$name', 'Temperature in Celsius');
-MQTT.pub(tr + 'dht22/tempc/$settable', 'false');
-MQTT.pub(tr + 'dht22/tempc/$datatype', 'float');
-MQTT.pub(tr + 'dht22/tempc/$unit', '°C');
+  {t: tr + 'ip/address/$name',  m:'ip address', qos: 1, retain: true},
+  {t: tr + 'ip/address/$datatype',  m:'string', qos: 1, retain: true},
+  {t: tr + 'ip/address/$settable',  m:'false', qos: 1, retain: true},
 
-MQTT.pub(tr + 'dht22/rh/$name', 'Relative Humidity');
-MQTT.pub(tr + 'dht22/rh/$settable', 'false');
-MQTT.pub(tr + 'dht22/rh/$datatype', 'float');
-MQTT.pub(tr + 'dht22/rh/$unit', '%');
+  {t: tr + 'dht22/$name',  m:'DHT22 Temp & Humidity Sensor', qos: 1, retain: true},
+  {t: tr + 'dht22/$type',  m:'DHT22', qos: 1, retain: true},
+  {t: tr + 'dht22/$properties',  m:'tempc,tempf,rh', qos: 1, retain: true},
 
-MQTT.pub(tr + 'south_door/$name', 'South Garage Door');
-MQTT.pub(tr + 'south_door/$type', 'door');
-MQTT.pub(tr + 'south_door/$properties', 'open,activate');
-MQTT.pub(tr + 'south_door/open/$name', 'South Door Open?');
-MQTT.pub(tr + 'south_door/open/$settable', 'false');
-MQTT.pub(tr + 'south_door/open/$datatype', 'boolean');
-MQTT.pub(tr + 'south_door/activate/$name', 'Activate Door Opener');
-MQTT.pub(tr + 'south_door/open/$settable', 'true');
-MQTT.pub(tr + 'south_door/open/$datatype', 'boolean');
+  {t: tr + 'dht22/tempf/$name',  m:'Temperature in Fahrenheit', qos: 1, retain: true},
+  {t: tr + 'dht22/tempf/$datatype',  m:'float', qos: 1, retain: true},
+  {t: tr + 'dht22/tempf/$settable',  m:'false', qos: 1, retain: true},
+  {t: tr + 'dht22/tempf/$unit',  m:'°F', qos: 1, retain: true},
 
-MQTT.pub(tr + 'north_door/$name', 'North Garage Door');
-MQTT.pub(tr + 'north_door/$type', 'door');
-MQTT.pub(tr + 'north_door/$properties', 'open');
-MQTT.pub(tr + 'north_door/open/$name', 'North Door Open?');
-MQTT.pub(tr + 'north_door/open/$settable', 'false');
-MQTT.pub(tr + 'north_door/open/$datatype', 'boolean');
+  {t: tr + 'dht22/tempc/$name',  m:'Temperature in Celsius', qos: 1, retain: true},
+  {t: tr + 'dht22/tempc/$settable',  m:'false', qos: 1, retain: true},
+  {t: tr + 'dht22/tempc/$datatype',  m:'float', qos: 1, retain: true},
+  {t: tr + 'dht22/tempc/$unit',  m:'°C', qos: 1, retain: true},
 
-MQTT.pub(tr + '$state', 'ready');
-print('homie setup finished');
+  {t: tr + 'dht22/rh/$name',  m:'Relative Humidity', qos: 1, retain: true},
+  {t: tr + 'dht22/rh/$settable',  m:'false', qos: 1, retain: true},
+  {t: tr + 'dht22/rh/$datatype',  m:'float', qos: 1, retain: true},
+  {t: tr + 'dht22/rh/$unit',  m:'%', qos: 1, retain: true},
+
+  {t: tr + 'south-door/$name',  m:'South Garage Door', qos: 1, retain: true},
+  {t: tr + 'south-door/$type',  m:'door', qos: 1, retain: true},
+  {t: tr + 'south-door/$properties',  m:'open,activate', qos: 1, retain: true},
+  {t: tr + 'south-door/open/$name',  m:'South Door Open?', qos: 1, retain: true},
+  {t: tr + 'south-door/open/$settable',  m:'false', qos: 1, retain: true},
+  {t: tr + 'south-door/open/$datatype',  m:'boolean', qos: 1, retain: true},
+  {t: tr + 'south-door/activate/$name',  m:'Activate Door Opener', qos: 1, retain: true},
+  {t: tr + 'south-door/activate/$settable',  m:'true', qos: 1, retain: true},
+  {t: tr + 'south-door/activate/$datatype',  m:'boolean', qos: 1, retain: true},
+
+  {t: tr + 'north-door/$name',  m:'North Garage Door', qos: 1, retain: true},
+  {t: tr + 'north-door/$type',  m:'door', qos: 1, retain: true},
+  {t: tr + 'north-door/$properties',  m:'open', qos: 1, retain: true},
+  {t: tr + 'north-door/open/$name',  m:'North Door Open?', qos: 1, retain: true},
+  {t: tr + 'north-door/open/$settable',  m:'false', qos: 1, retain: true},
+  {t: tr + 'north-door/open/$datatype',  m:'boolean', qos: 1, retain: true},
+  {t: tr + '$state',  m:'ready', qos: 1, retain: true}
+];
+
+let homie_msg_ix = 0;
+let homie_init = false;
+
+// Asynchronously advance through the homie setup stuff until done
+Timer.set(Cfg.get("homie.pubinterval"), true, function() {
+  if (!MQTT.isConnected()) {
+    print('Waiting for MQTT connect...');
+    return;
+  }
+  let br = mgos_mqtt_num_unsent_bytes();
+  let maxbr = Cfg.get("mqtt.max_unsent");
+  if (br > maxbr) {
+    print('home setup: waiting for MQTT queue to clear: ', br);
+  }
+  if (homie_msg_ix >= 0 && homie_msg_ix < homie_setup_msgs.length) {
+    let msg = homie_setup_msgs[homie_msg_ix];
+    let ret = MQTT.pub(msg.t, msg.m, 2, msg.retain);
+    if (ret === 0) {
+      print("homie pub failed: ", ret);
+    }
+    else {
+      // if publication was successful, on the next go around, send the next message
+      homie_msg_ix += 1;
+    }
+  }
+}, null);
+
+// subscribe to homie set commands
+MQTT.sub(tr + 'south-door/activate/set', function(conn, topic, msg) {
+  print('Topic:', topic, 'message:', msg);
+  if (msg === '1' || msg === 'true') {
+    activate_door_south();
+    return;
+  }
+  print("Message ", msg, ' was ignored');
+}, null);
+print('subscribed');
 
 // Garage relay is activated by shorting to ground
 GPIO.set_pull(s_door_activate, GPIO.PULL_UP);
 GPIO.setup_output(s_door_activate, 1);
 
+// Setup array for interrupt reading pin
+let cpins = [
+    {pin: n_door_contact, topic: "north-door/open", last_r: -1},
+    {pin: s_door_contact, topic: "south-door/open", last_r: -1}
+];
+
+for (let i=0; i < cpins.length; i++) {
+  let cp = cpins[i];
+  GPIO.set_pull(cp.pin, GPIO.PULL_UP);
+  GPIO.set_mode(cp.pin, GPIO.MODE_INPUT);
+  cp.last_r = GPIO.read(cp.pin);
+  MQTT.pub(tr + cp.topic, cp.last_r === 0 ? 'false' : 'true');
+  GPIO.set_int_handler(cp.pin, GPIO.INT_EDGE_ANY, function(pin) {
+    let v = GPIO.read(pin);
+    if (v !== cp.last_r) {
+      print('Pin', pin, cp.topic + ' got interrupt: ', v);
+      MQTT.pub(tr + cp.topic, v === 0 ? 'false' : 'true');
+    }
+    cp.last_r = v;
+  }, null);
+  GPIO.enable_int(cp.pin); 
+}
+
+/*
 GPIO.set_pull(n_door_contact, GPIO.PULL_UP);
 GPIO.set_mode(n_door_contact, GPIO.MODE_INPUT);
 let n_door_reading = GPIO.read(n_door_contact);
-MQTT.pub(tr + 'north_door/open', n_door_reading === 0 ? 'false' : 'true');
+MQTT.pub(tr + 'north-door/open', n_door_reading === 0 ? 'false' : 'true');
 GPIO.set_int_handler(n_door_contact, GPIO.INT_EDGE_ANY, function(pin) {
   let v = GPIO.read(pin);
   if (v !== n_door_reading) {
     print('Pin', pin, 'got north door interrupt: ', v);
-    let okrh = MQTT.pub(device_id + '/contact/north_door', JSON.stringify(v)); 
-    MQTT.pub(tr + 'north_door/open', v === 0 ? 'false' : 'true');
+    MQTT.pub(tr + 'north-door/open', v === 0 ? 'false' : 'true');
   }
   n_door_reading = v;
 }, null);
@@ -91,16 +174,16 @@ GPIO.enable_int(n_door_contact);
 GPIO.set_pull(s_door_contact, GPIO.PULL_UP);
 GPIO.set_mode(s_door_contact, GPIO.MODE_INPUT);
 let s_door_reading = GPIO.read(s_door_contact);
-MQTT.pub(tr + 'contact/south_door', s_door_reading === 0 ? 'false' : 'true');
 GPIO.set_int_handler(s_door_contact, GPIO.INT_EDGE_ANY, function(pin) {
    let v = GPIO.read(pin);
    if (v !== s_door_reading) {
     print('Pin', pin, 'got south door interrupt: ', v);
-    MQTT.pub(tr + 'contact/south_door', v === 0 ? 'false' : 'true');
+    MQTT.pub(tr + 'south-door/open', v === 0 ? 'false' : 'true');
    }
    s_door_reading = v;
 }, null);
 GPIO.enable_int(s_door_contact);
+*/
 
 Timer.set(1000, true, function() {
   if (device_id === "unknown") {
@@ -111,28 +194,38 @@ Timer.set(1000, true, function() {
     }, null);
   }
 
-  let tempC = dht.getTemp();
-  let tempF = SensorUtils.fahrenheit(tempC);
-  let rh = dht.getHumidity();
-  print('TempC:', tempC);
-  print('TempF:', tempF);
-  print('RHum%:', rh);
-  print('dht_pin:', dht_pin);
-  print('s_door_contact:', s_door_contact);
-  print('device_id:', device_id);
+  let sdata = {
+    dht22: {
+      celsius: dht.getTemp(),
+      fahrenheit: SensorUtils.fahrenheit(dht.getTemp()),
+      rh: dht.getHumidity(),
+    },
+    doors: {
+      south: { 
+        is_open: (GPIO.read(s_door_contact) === 0)
+      },
+      north: {
+        is_open: (GPIO.read(n_door_contact) === 0)
+      }
+    }
+  };
 
-  if (++counter % pubInt === 0) {
-    MQTT.pub(tr + 'dht22/rh', JSON.stringify(rh));
-    MQTT.pub(tr + 'dht22/tempc', JSON.stringify(tempC));
-    MQTT.pub(tr + 'dht22/tempf', JSON.stringify(tempF));
+  print(JSON.stringify(sdata));
 
-    let v = GPIO.read(s_door_contact);
-    MQTT.pub(tr + 'south_door/open', v === 0 ? 'false' : 'true');
-    v = GPIO.read(n_door_contact);
-    MQTT.pub(tr + 'north_door/open', v === 0 ? 'false' : 'true');
+  if (counter++ % pubInt === 0 && homie_msg_ix >= homie_setup_msgs.length-1) {
+    MQTT.pub(tr + '$state', 'ready', 1, true);
+    MQTT.pub(tr + 'dht22/rh', JSON.stringify(sdata.dht22.rh));
+    MQTT.pub(tr + 'dht22/tempc', JSON.stringify(sdata.dht22.celsius));
+    MQTT.pub(tr + 'dht22/tempf', JSON.stringify(sdata.dht22.fahrenheit));
+    MQTT.pub(tr + 'south-door/open', JSON.stringify(sdata.doors.south.is_open))
+    MQTT.pub(tr + 'north-door/open', JSON.stringify(sdata.doors.north.is_open))
+    MQTT.pub(tr + 'ip/address', device_ip);
   }
 }, null);
 
+// *****************************************************************
+// RPC Handler Registration 
+//
 RPC.addHandler('Temp.Read', function(args) {
   return { value: dht.getTemp() };
 });
@@ -146,11 +239,6 @@ RPC.addHandler('RH.Read', function(args) {
 });
 
 RPC.addHandler('SouthDoor.Activate', function(args) {
-  GPIO.write(s_door_activate, 0);
-  // Toggle the pin after the activation interval
-  Timer.set(door_activate_millis, 0, function() {
-    GPIO.toggle(s_door_activate);
-    print('Activate state off');
-  }, null);
+  activate_door_south();
   return { value: "Activated" };
 });

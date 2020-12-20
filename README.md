@@ -1,16 +1,24 @@
 # Garage Mongoose OS app
 
-## Overview
+# Hardware Platform
+ESP8266 LoLin NodeMCU. 
 
-Features:
- * relay cycle control for garage door opening
+<img src="docs/ESP8266-NodeMCU-kit-12-E-pinout-gpio-pin.png">
+
+It's important to select the correct PINs for the relays so that you don't get cycling as the device resets, powers on, etc. The relays assume they are controlled from a pin pulled high. In other words, they switched on by transitioning their input pin from HI to LO.
+
+In this case, I'm using GPIO 4 to control the south door relay.
+
+# Features
+ * Relay cycle control for garage door opening
  * DHT22 temp/humidity readings
  * MQTT publishing
  * HTTP/MQTT RPC Control
  * Second relay control for lights
+ * OTA Firmware Updating
 
  # Relay Activation
- Relay activation simulates a doorbell button press, the relay turns on briefly, and this is turned off by the software.
+ Relay activation simulates a doorbell button press, the relay turns on briefly, then is turned off. This switching on and then off is in response to a single activation request from the user, as opposed to requiring 2 user requests, one to turn the relay on followed by another one to turn it off. 
  ## HTTP
  Issue an HTTP get like so, no paylaod is required. 
  ```bash
@@ -31,3 +39,12 @@ In the example below, "alpha" is "correlation ID", that is, an identifier that w
 ## MQTT Trigger
 TODO: It would be simpler in (especially for OpenHAB) if the relay activation could be triggered simply by the arrival of any message body `1` to a set topic, rather than having to craft and send a JSON document per MongooseOS' RPC requirements.
 
+
+# OTA Firmware Update
+When you use the `mos flash` command certain configurations parameters (like WiFi) configuration are lost.
+
+The simplest method is to use an HTTP POST:
+```bash
+cd project-repo-root
+curl -i -F filedata=@./build/fw.zip http://192.168.1.xxx/update
+```
