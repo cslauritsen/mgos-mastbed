@@ -17,18 +17,16 @@ let tolowercase = function (s) {
   return ls;
 };
 
-let device_id = Cfg.get('project.name');
-let device_ip = "unknown";
 
-let client_id = Cfg.get('device.id');
-let thing_id = "mastbed-" + tolowercase(client_id.slice(client_id.length - 6, client_id.length));
+let nm = Cfg.get('project.name');
+let device_id = Cfg.get('device.id');
+let thing_id = nm + "-" + tolowercase(device_id.slice(device_id.length - 6, device_id.length));
 
 // homie topic root
 let tr = 'homie/' + thing_id + '/';
 Cfg.set({mqtt: {will_topic: tr + '$state', will_message: "lost"}});
 load('api_mqtt.js');
 
-let nm = Cfg.get('project.name');
 let dht_pin = Cfg.get('pins.dht');
 let motion_pin = Cfg.get('pins.pir');
 Log.info('dht_pin:'+ JSON.stringify(dht_pin));
@@ -84,8 +82,10 @@ let homie_setup_msgs = [
 let homie_msg_ix = 0;
 let homie_init = false;
 
+let homie_setup_timer = 0;
+
 // Asynchronously advance through the homie setup stuff until done
-Timer.set(Cfg.get("homie.pubinterval"), true, function() {
+homie_setup_timer = Timer.set(Cfg.get("homie.pubinterval"), true, function() {
   if (!MQTT.isConnected()) {
     print('Waiting for MQTT connect...');
     return;
@@ -130,11 +130,21 @@ Timer.set(Cfg.get('time.main_loop_millis'), true, function() {
   Log.print(Log.INFO, "Motion: " + JSON.stringify(sdata.motion.active)
     + " TempF: " + JSON.stringify(sdata.dht22.fahrenheit)); 
 
-  MQTT.pub(tr + '$state', 'ready', 1, true);
-  MQTT.pub(tr + 'dht22/rh', JSON.stringify(sdata.dht22.rh));
-  MQTT.pub(tr + 'dht22/tempc', JSON.stringify(sdata.dht22.celsius));
-  MQTT.pub(tr + 'dht22/tempf', JSON.stringify(sdata.dht22.fahrenheit));
-  MQTT.pub(tr + 'motion/active', JSON.stringify(sdata.motion.active));
+  // don't publish data until the homie setup is finished
+  if (homie_msg_ix >= homie_setup_msgs.length - 1) {
+    MQTT.pub(tr + '$state', 'ready', 1, true);
+    MQTT.pub(tr + 'dht22/rh', JSON.stringify(sdata.dht22.rh));
+    MQTT.pub(tr + 'dht22/tempc', JSON.stringify(sdata.dht22.celsius));
+    MQTT.pub(tr + 'dht22/tempf', JSON.stringify(sdata.dht22.fahrenheit));
+    MQTT.pub(tr + 'motion/active', JSON.stringify(sdata.motion.active));
+
+    // Cancel the other timer, as it's no longer needed
+    if (homie_setup_timer !== 0) {
+      Log.info("Homie setup timer finished, canceling");
+      Timer.del(homie_setup_timer);
+      homie_setup_timer = 0;
+    }
+  }
 }, null);
 
 // *****************************************************************
