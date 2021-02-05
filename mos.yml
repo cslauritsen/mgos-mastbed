@@ -23,7 +23,10 @@ filesystem:
 # Uncomment and modify according to your needs:
 
 config_schema:
-  - ["project.name", "s", "motion-temp", {title: "Project Name"}]
+  # the project.name should denote function, not location
+  # but since I"ve already set it up in openhab i'm not going to change it in this project
+  #- ["project.name", "s", "motion-temp", {title: "Project Name"}]
+  - ["project.name", "s", "mastbed", {title: "Project Name"}]
   - ["garage", "o", {title: "My app custom settings"}]
   - ["garage.bool_value", "b", false, {title: "Some boolean value"}]
   - ["project.string_value", "s", "", {title: "Some string value"}]
