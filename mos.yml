@@ -23,17 +23,14 @@ filesystem:
 # Uncomment and modify according to your needs:
 
 config_schema:
-  - ["project.name", "s", "garage", {title: "Project Name"}]
+  - ["project.name", "s", "masterbed", {title: "Project Name"}]
   - ["garage", "o", {title: "My app custom settings"}]
   - ["garage.bool_value", "b", false, {title: "Some boolean value"}]
-  - ["garage.string_value", "s", "", {title: "Some string value"}]
-  - ["garage.int_value", "i", 123, {title: "Some integer value"}]
-  - ["garage.dht_pin", "i", 0, {title: "DHT GPIO Pin"}]
-  - ["garage.mqttPubInterval", "i", 60, {title: "How many seconds between MQTT publications"}]
-  - ["garage.south_door_contact", "i",  13, { title: "Contact PIN to detect South Door Open/Closed"}]
-  - ["garage.north_door_contact", "i",  12, { title: "Contact PIN to detect North Door Open/Closed"}]
-  - ["garage.south_door_activation_pin", "i",  4, { title: "GPIO PIN to activate South door opener"}]
-  - ["garage.door_activate_millis", "i",  500, { title: "Milliseconds to leave door relay activated"}]
+  - ["project.string_value", "s", "", {title: "Some string value"}]
+  - ["project.int_value", "i", 123, {title: "Some integer value"}]
+  - ["pins.dht", "i", 0, {title: "DHT GPIO Pin"}]
+  - ["pins.pir", "i", 1, {title: "PIR Motion Sensor GPIO Pin"}]
+  - ["project.mqttPubInterval", "i", 60, {title: "How many seconds between MQTT publications"}]
   - ["mqtt.server", "s",  "192.168.1.5", { title: "MQTT Server"} ]
   - ["mqtt.will_topic", "s",  "homie/${device.id}/$state", { title: "MQTT LWT message topic prescribed by Homie 4.0 spec"} ]
   - ["mqtt.will_message", "s",  "lost", { title: "MQTT LWT message prescribed by Homie 4.0 spec"} ]
@@ -42,6 +39,8 @@ config_schema:
   - ["mqtt.max_unsent", "i",  35, { title: "Max unsent bytes before sending again"}]
   - ["homie.pubinterval", "i",  200, { title: "Millis to wait before sending another home cfg msg"}]
   - ["rpc.mqtt.enable", "b",  true, { title: "MQTT RPC enabled"} ]
+  - ["debug.udp_log_addr", "s",  "192.168.1.5:31338", { title: "UDP log target"} ]
+  - ["time.main_loop_millis", "i",  60000, { title: "Interval between main loop iterations and network transmissions"} ]
 
 # These settings get compiled into the C structure, and can be accessed
 # from the C code this way:

@@ -1,44 +1,35 @@
-# Garage Mongoose OS app
+# DHT22 + Motion Mongoose OS app
 
 # Hardware Platform
 ESP8266 LoLin NodeMCU. 
 
 <img src="docs/ESP8266-NodeMCU-kit-12-E-pinout-gpio-pin.png">
 
-It's important to select the correct PINs for the relays so that you don't get cycling as the device resets, powers on, etc. The relays assume they are controlled from a pin pulled high. In other words, they switched on by transitioning their input pin from HI to LO.
-
-In this case, I'm using GPIO 4 to control the south door relay.
 
 # Features
- * Relay cycle control for garage door opening
- * DHT22 temp/humidity readings
+ * DHT22 Temperature and Humidity Sensing
+ * PIR motion sensor
  * MQTT publishing
  * HTTP/MQTT RPC Control
- * Second relay control for lights
  * OTA Firmware Updating
 
- # Relay Activation
- Relay activation simulates a doorbell button press, the relay turns on briefly, then is turned off. This switching on and then off is in response to a single activation request from the user, as opposed to requiring 2 user requests, one to turn the relay on followed by another one to turn it off. 
- ## HTTP
+ # HTTP RPC
  Issue an HTTP get like so, no paylaod is required. 
  ```bash
- curl http://192.168.1.xxx/rpc/SouthDoor.Activate
+ curl http://192.168.1.xxx/rpc/Motion.Read
  ```
 
- ## MQTT RPC
- you can send a command via MQTT. This means you don't need to have a static IP for the device, but you will need to know its unique ID. I'm working on enabling auto-discovery in services like OpenHAB by leveraging via the [homie convention](https://homieiot.github.io).
+ # MQTT RPC
+ You can send a command via MQTT. This means you don't need to have a static IP for the device, but you will need to know its unique ID which doesn't change like the IP might. 
+This device supports auto-discovery in services like OpenHAB by leveraging via the [homie convention](https://homieiot.github.io).
 
 In the example below, "alpha" is "correlation ID", that is, an identifier that will be echoed back by the node in response to an RPC request which will contain information about the node's response, errors, etc. 
 
  ```bash
  mqttpub -h 192.168.1.5 \
     -t esp8266_7E5E96/rpc  \
-    '{id: 1, "src":"alpha", "method": "SouthDoor.Activate"}' 
+    '{id: 1, "src":"alpha", "method": "Motion.Read"}' 
  ```
-
-## MQTT Trigger
-TODO: It would be simpler in (especially for OpenHAB) if the relay activation could be triggered simply by the arrival of any message body `1` to a set topic, rather than having to craft and send a JSON document per MongooseOS' RPC requirements.
-
 
 # OTA Firmware Update
 When you use the `mos flash` command certain configurations parameters (like WiFi) configuration are lost.
