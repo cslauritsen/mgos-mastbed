@@ -10,7 +10,7 @@ static void int_motion_cb(int pin, void *obj)
     if (abs(interrupt_millis - thing->motionDebounce) > 400)
     {
         thing->motionProp->setValue(reading == 0 ? true : false);
-        this->motionProp->publish();
+        thing->motionProp->publish();
     }
     else
     {

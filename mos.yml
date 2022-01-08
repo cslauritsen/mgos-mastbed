@@ -35,6 +35,7 @@ config_schema:
   - ["pins.pir", "i", 1, {title: "PIR Motion Sensor GPIO Pin"}]
   - ["project.mqttPubInterval", "i", 60, {title: "How many seconds between MQTT publications"}]
   - ["homie.pubinterval", "i",  200, { title: "Millis to wait before sending another homie cfg msg"}]
+  - ["homie.enable", "b",  true, { title: "Send Homie convention messages?"}]
   - ["mqtt.server", "s",  "192.168.1.5", { title: "MQTT Server"} ]
   - ["mqtt.will_topic", "s",  "homie/${device.id}/$state", { title: "MQTT LWT message topic prescribed by Homie 4.0 spec"} ]
   - ["mqtt.will_message", "s",  "lost", { title: "MQTT LWT message prescribed by Homie 4.0 spec"} ]

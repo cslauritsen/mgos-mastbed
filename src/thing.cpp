@@ -1,16 +1,8 @@
 #include "all.h"
 
 Thing::Thing(std::string aid, std::string aVersion, std::string aname, std::string aLocalIp, std::string aMac)
+    : homie::Device(aid, aVersion, aname, aLocalIp, aMac)
 {
-    id = aid;
-    this->version = aVersion;
-    name = aname;
-    this->localIp = aLocalIp;
-    this->setMac(aMac);
-    topicBase = std::string("homie/") + id + "/";
-    this->computePsk();
-    extensions.push_back(std::string("org.homie.legacy-firmware:0.1.1:[4.x]"));
-    lifecycleState = homie::INIT;
 
     this->motionPin = mgos_sys_config_get_pins_pir();
     mgos_gpio_set_mode(this->motionPin, MGOS_GPIO_MODE_INPUT);

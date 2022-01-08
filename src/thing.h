@@ -1,7 +1,7 @@
 #pragma once
 #include "all.h"
 
-class Thing : homie::Device
+class Thing : public homie::Device
 {
 
 public:
@@ -18,6 +18,6 @@ public:
     bool readMotion();
     double motionDebounce;
 
-    Thing(std::string, std::string, std::string, std::string, std::string);
+    Thing(std::string aid, std::string aVersion, std::string aname, std::string aLocalIp, std::string aMac);
     ~Thing();
 };
