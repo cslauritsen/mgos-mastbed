@@ -85,9 +85,11 @@ let homie_init = false;
 let homie_setup_timer = 0;
 
 // Asynchronously advance through the homie setup stuff until done
+// We use the timer-induced delay to avoid spamming the network interface 
+// and causing packet loss
 homie_setup_timer = Timer.set(Cfg.get("homie.pubinterval"), true, function() {
   if (!MQTT.isConnected()) {
-    print('Waiting for MQTT connect...');
+    Log.info('Waiting for MQTT connect...');
     return;
   }
   let br = mgos_mqtt_num_unsent_bytes();

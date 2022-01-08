@@ -1,6 +1,6 @@
 author: mongoose-os
 description: A Mongoose OS app skeleton
-version: 1.0
+version: 0.1.0
 
 libs_version: ${mos.version}
 modules_version: ${mos.version}
@@ -34,6 +34,7 @@ config_schema:
   - ["pins.dht", "i", 0, {title: "DHT GPIO Pin"}]
   - ["pins.pir", "i", 1, {title: "PIR Motion Sensor GPIO Pin"}]
   - ["project.mqttPubInterval", "i", 60, {title: "How many seconds between MQTT publications"}]
+  - ["homie.pubinterval", "i",  200, { title: "Millis to wait before sending another homie cfg msg"}]
   - ["mqtt.server", "s",  "192.168.1.5", { title: "MQTT Server"} ]
   - ["mqtt.will_topic", "s",  "homie/${device.id}/$state", { title: "MQTT LWT message topic prescribed by Homie 4.0 spec"} ]
   - ["mqtt.will_message", "s",  "lost", { title: "MQTT LWT message prescribed by Homie 4.0 spec"} ]
