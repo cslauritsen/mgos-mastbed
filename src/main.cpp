@@ -23,7 +23,7 @@ static void rh_cb(struct mg_rpc_request_info *ri, void *cb_arg,
                   struct mg_rpc_frame_info *fi, struct mg_str args)
 {
     Thing *thing = (Thing *)cb_arg;
-    mg_rpc_send_responsef(ri, "{ value: %s }", thing->rhProp->getValue());
+    mg_rpc_send_responsef(ri, "{ value: %s }", thing->rhProp->getValue().c_str());
     (void)fi;
 }
 
@@ -31,7 +31,7 @@ static void tempf_cb(struct mg_rpc_request_info *ri, void *cb_arg,
                      struct mg_rpc_frame_info *fi, struct mg_str args)
 {
     Thing *thing = (Thing *)cb_arg;
-    mg_rpc_send_responsef(ri, "{ value: %s }", thing->tempfProp->getValue());
+    mg_rpc_send_responsef(ri, "{ value: %s }", thing->tempfProp->getValue().c_str());
     (void)fi;
 }
 
@@ -40,7 +40,7 @@ static void motion_cb(struct mg_rpc_request_info *ri, void *cb_arg,
 {
     Thing *thing = (Thing *)cb_arg;
     thing->takeReading();
-    mg_rpc_send_responsef(ri, "{ value: %s }", thing->motionProp->getValue());
+    mg_rpc_send_responsef(ri, "{ value: %s }", thing->motionProp->getValue().c_str());
     (void)fi;
 }
 
@@ -60,13 +60,12 @@ static void sys_ready_cb(int ev, void *ev_data, void *userdata)
     LOG(LL_INFO, ("Got system event %d", ev));
     Thing *thing = (Thing *)userdata;
 
-    thing->setLifecycleState(homie::INIT);
     if (mgos_sys_config_get_homie_enable())
     {
+        thing->setLifecycleState(homie::INIT);
         thing->introduce(); // may require tuning of mqtt.max_queue_length
         thing->setLifecycleState(homie::READY);
-        auto msg = thing->getLifecycleMsg();
-        thing->publish(msg);
+        thing->publish(thing->getLifecycleMsg());
     }
 }
 

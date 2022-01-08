@@ -36,6 +36,7 @@ config_schema:
   - ["mqtt.server", "192.168.1.5" ]
   - ["mqtt.will_message", "lost" ]
   - ["mqtt.will_retain", true ]
+  - ["mqtt.max_queue_length", 35 ]
   - ["mqtt.enable", true ]
   - ["mqtt.max_unsent", 35 ]
 

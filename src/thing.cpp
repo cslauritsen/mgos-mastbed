@@ -33,7 +33,7 @@ Thing::~Thing()
 
 bool Thing::readMotion()
 {
-    return mgos_gpio_read(this->motionPin) == 0 ? true : false;
+    return mgos_gpio_read(this->motionPin) == 0 ? false : true;
 }
 
 void Thing::takeReading()
@@ -60,5 +60,5 @@ void Thing::takeReading()
         this->tempcProp->setValue(reading);
         this->tempfProp->setValue(reading * 9.0f / 5.0f + 32.0f);
     }
-    this->motionProp->setValue(readMotion());
+    this->motionProp->setValue(this->readMotion());
 }
