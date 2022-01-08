@@ -18,6 +18,6 @@ public:
     bool readMotion();
     double motionDebounce;
 
-    Thing(std::string aid, std::string aVersion, std::string aname, std::string aLocalIp, std::string aMac);
+    Thing(std::string aid, std::string aVersion, std::string aname);
     ~Thing();
 };

@@ -1,7 +1,7 @@
 #include "all.h"
 
-Thing::Thing(std::string aid, std::string aVersion, std::string aname, std::string aLocalIp, std::string aMac)
-    : homie::Device(aid, aVersion, aname, aLocalIp, aMac)
+Thing::Thing(std::string aid, std::string aVersion, std::string aname)
+    : homie::Device(aid, aVersion, aname)
 {
 
     this->motionPin = mgos_sys_config_get_pins_pir();

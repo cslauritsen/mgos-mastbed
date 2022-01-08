@@ -27,41 +27,19 @@ config_schema:
   # but since I"ve already set it up in openhab i'm not going to change it in this project
   #- ["project.name", "s", "motion-temp", {title: "Project Name"}]
   - ["project.name", "s", "mastbed", {title: "Project Name"}]
-  - ["garage", "o", {title: "My app custom settings"}]
-  - ["garage.bool_value", "b", false, {title: "Some boolean value"}]
-  - ["project.string_value", "s", "", {title: "Some string value"}]
-  - ["project.int_value", "i", 123, {title: "Some integer value"}]
   - ["pins.dht", "i", 0, {title: "DHT GPIO Pin"}]
   - ["pins.pir", "i", 1, {title: "PIR Motion Sensor GPIO Pin"}]
-  - ["project.mqttPubInterval", "i", 60, {title: "How many seconds between MQTT publications"}]
-  - ["homie.pubinterval", "i",  200, { title: "Millis to wait before sending another homie cfg msg"}]
   - ["homie.enable", "b",  true, { title: "Send Homie convention messages?"}]
-  - ["mqtt.server", "s",  "192.168.1.5", { title: "MQTT Server"} ]
-  - ["mqtt.will_topic", "s",  "homie/${device.id}/$state", { title: "MQTT LWT message topic prescribed by Homie 4.0 spec"} ]
-  - ["mqtt.will_message", "s",  "lost", { title: "MQTT LWT message prescribed by Homie 4.0 spec"} ]
-  - ["mqtt.will_retain", "b",  true, { title: "MQTT LWT retention flag"} ]
-  - ["mqtt.enable", "b",  true, { title: "MQTT enabled"} ]
-  - ["mqtt.max_unsent", "i",  35, { title: "Max unsent bytes before sending again"}]
   - ["time.main_loop_millis", "i",  60000, { title: "Interval between main loop iterations and network transmissions"} ]
-  - ["rpc.mqtt.enable", "b",  true, { title: "MQTT RPC enabled"} ]
-  - ["debug.udp_log_addr", "s",  "192.168.1.5:31338", { title: "UDP log target"} ]
+  - ["rpc.mqtt.enable", true ]
+  - ["debug.udp_log_addr", "192.168.1.5:31338" ]
+  - ["mqtt.server", "192.168.1.5" ]
+  - ["mqtt.will_message", "lost" ]
+  - ["mqtt.will_retain", true ]
+  - ["mqtt.enable", true ]
+  - ["mqtt.max_unsent", 35 ]
 
-# These settings get compiled into the C structure, and can be accessed
-# from the C code this way:
-#
-# printf("Hello from %s!\n", mgos_sys_config_get_device_id());
-#
-# Settings are cool: can be modified remotely without full firmware upgrade!
-#
-# To see all available compiled settings, buid the firmware and open
-# build/gen/mgos_config.h file.
-#
-# Also, in this config_schema section, you can override existing
-# settings that has been created by other libraries. For example, debug log
-# level is 2 by default. For this firmware we can override it to 3:
-#
-# config_schema:
-#  - ["debug.level", 3]
+  - ["dash.enable", true ]
 
 libs:
   - origin: https://github.com/mongoose-os-libs/boards
@@ -78,7 +56,7 @@ libs:
   - origin: https://github.com/mongoose-os-libs/mqtt
   - origin: https://github.com/mongoose-os-libs/dash
   - origin: https://github.com/mongoose-os-libs/rpc-loopback
-  - origin: https://github.com/cslauritsen/mgos-homie
+  - origin: https://github.com/cslauritsen/cslhomie
 
 # Used by the mos tool to catch mos binaries incompatible with this file format
 manifest_version: 2017-09-29
