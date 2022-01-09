@@ -38,7 +38,6 @@ static void motion_cb(struct mg_rpc_request_info *ri, void *cb_arg,
                       struct mg_rpc_frame_info *fi, struct mg_str args)
 {
     Thing *thing = (Thing *)cb_arg;
-    thing->takeReading();
     mg_rpc_send_responsef(ri, "{ value: %s }", thing->motionProp->valueFunction().c_str());
     (void)fi;
 }
@@ -47,10 +46,9 @@ static void repeat_cb(void *arg)
 {
     Thing *thing = (Thing *)arg;
     int qos = 1;
-    bool retain = true;
-    thing->rhProp->publish(qos, retain);
-    thing->tempfProp->publish(qos, retain);
-    thing->motionProp->publish(qos, retain);
+    thing->rhProp->publish(qos);
+    thing->tempfProp->publish(qos);
+    thing->motionProp->publish(qos);
     thing->inquireNetConfig();
     thing->publishWifi();
 }

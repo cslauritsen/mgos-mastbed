@@ -34,7 +34,9 @@ static void network_config_rpc_cb(struct mg_rpc *c, void *cb_arg, struct mg_rpc_
             homieDevice->setLocalIp(str);
             if (oldVal != str)
             {
-                homieDevice->publish(homie::Message(homieDevice->getTopicBase() + "$localip", str));
+                auto t = homieDevice->getTopicBase();
+                t += "$localip";
+                homieDevice->publish(homie::Message(t , str));
             }
         }
         else
@@ -67,4 +69,10 @@ void homie::Device::inquireNetConfig()
     struct mg_rpc_call_opts opts = {.dst = mg_mk_str(MGOS_RPC_LOOPBACK_ADDR)};
     mg_rpc_callf(mgos_rpc_get_global(), mg_mk_str("Sys.GetInfo"), network_config_rpc_cb, this, &opts, NULL);
     callCount++;
+}
+
+int homie::Device::getRssi() 
+{
+    int ret = mgos_wifi_sta_get_rssi();
+    return ret;
 }

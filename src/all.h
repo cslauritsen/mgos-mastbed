@@ -9,6 +9,8 @@
 #include <homie.hpp>
 #include "thing.h"
 
+#include <string>
+
 extern "C"
 {
 #include "mgos.h"
