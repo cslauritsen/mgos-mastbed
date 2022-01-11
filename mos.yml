@@ -1,4 +1,4 @@
-author: mongoose-os
+author: Chad S. Lauritsen <noone@nowhere.none>
 description: A Mongoose OS app skeleton
 version: 0.1.4
 
@@ -33,6 +33,7 @@ config_schema:
   - ["time.main_loop_millis", "i",  60000, { title: "Interval between main loop iterations and network transmissions"} ]
   - ["rpc.mqtt.enable", true ]
   - ["debug.udp_log_addr", "192.168.1.5:31338" ]
+  - ["debug.level", 2 ]
   - ["mqtt.server", "192.168.1.5" ]
   - ["mqtt.will_message", "lost" ]
   - ["mqtt.will_retain", true ]
@@ -61,3 +62,12 @@ libs:
 
 # Used by the mos tool to catch mos binaries incompatible with this file format
 manifest_version: 2017-09-29
+
+cflags:
+  - "-Os" # reduce for size
+
+cxxflags:
+  - "-Os" # reduce for size
+  - "-Wall" 
+  - "-pedantic" 
+  - "-Werror" 

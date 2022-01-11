@@ -22,7 +22,7 @@ static void rh_cb(struct mg_rpc_request_info *ri, void *cb_arg,
                   struct mg_rpc_frame_info *fi, struct mg_str args)
 {
     Thing *thing = (Thing *)cb_arg;
-    mg_rpc_send_responsef(ri, "{ value: %s }", thing->rhProp->valueFunction().c_str());
+    mg_rpc_send_responsef(ri, "{ value: %s }", thing->rhProp->read().c_str());
     (void)fi;
 }
 
@@ -30,7 +30,7 @@ static void tempf_cb(struct mg_rpc_request_info *ri, void *cb_arg,
                      struct mg_rpc_frame_info *fi, struct mg_str args)
 {
     Thing *thing = (Thing *)cb_arg;
-    mg_rpc_send_responsef(ri, "{ value: %s }", thing->tempfProp->valueFunction().c_str());
+    mg_rpc_send_responsef(ri, "{ value: %s }", thing->tempFProp->read().c_str());
     (void)fi;
 }
 
@@ -38,8 +38,13 @@ static void motion_cb(struct mg_rpc_request_info *ri, void *cb_arg,
                       struct mg_rpc_frame_info *fi, struct mg_str args)
 {
     Thing *thing = (Thing *)cb_arg;
-    mg_rpc_send_responsef(ri, "{ value: %s }", thing->motionProp->valueFunction().c_str());
+    mg_rpc_send_responsef(ri, "{ value: %s }", thing->motionProp->read().c_str());
     (void)fi;
+}
+
+static void spam_cb(void *arg)
+{
+    LOG(LL_DEBUG, ("mqtt bytes: %d", mgos_mqtt_num_unsent_bytes()));
 }
 
 static void repeat_cb(void *arg)
@@ -47,7 +52,7 @@ static void repeat_cb(void *arg)
     Thing *thing = (Thing *)arg;
     int qos = 1;
     thing->rhProp->publish(qos);
-    thing->tempfProp->publish(qos);
+    thing->tempFProp->publish(qos);
     thing->motionProp->publish(qos);
     thing->inquireNetConfig();
     thing->publishWifi();
@@ -94,6 +99,7 @@ enum mgos_app_init_result mgos_app_init(void)
     mg_rpc_add_handler(mgos_rpc_get_global(), "motion.read", NULL, motion_cb, thing);
 
     mgos_set_timer(mgos_sys_config_get_time_main_loop_millis(), 1, repeat_cb, thing);
+    mgos_set_timer(1000, 1, spam_cb, thing);
 
     // Register callback when sys init is complete
     mgos_event_add_handler(MGOS_EVENT_INIT_DONE, sys_ready_cb, thing);

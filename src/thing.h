@@ -8,8 +8,13 @@ public:
     uint8_t dhtPin;
     struct mgos_dht *dht;
     homie::Node *dhtNode;
-    homie::Property *tempfProp;
-    homie::Property *tempcProp;
+
+    float tempC;
+    void updateTempC();
+    float rh;
+    void updateRh();
+    homie::Property *tempFProp;
+    homie::Property *tempCProp;
     homie::Property *rhProp;
     homie::Node *pirNode;
     homie::Property *motionProp;
