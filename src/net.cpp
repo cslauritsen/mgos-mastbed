@@ -67,6 +67,7 @@ void homie::Device::inquireNetConfig()
     static int callCount = 1;
     LOG(LL_DEBUG, ("net_inquire_config called %d x", callCount));
     struct mg_rpc_call_opts opts; 
+    memset(&opts, 0, sizeof(opts));
     opts.dst = mg_mk_str(MGOS_RPC_LOOPBACK_ADDR);
     mg_rpc_callf(mgos_rpc_get_global(), mg_mk_str("Sys.GetInfo"), network_config_rpc_cb, this, &opts, NULL);
     callCount++;
