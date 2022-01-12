@@ -1,5 +1,4 @@
 #include "all.h"
-#if 0
 
 static void int_motion_cb(int pin, void *obj) {
   Thing *thing = (Thing *)obj;
@@ -61,11 +60,10 @@ static void sys_ready_cb(int ev, void *ev_data, void *userdata) {
     thing->publish(thing->getLifecycleMsg());
   }
 }
-#endif
+
 enum mgos_app_init_result mgos_app_init(void) {
   LOG(LL_INFO, ("Startup %s", __FILE__));
 
-#if 0
   std::string projectName = std::string(mgos_sys_config_get_project_name());
   const char *deviceId = mgos_sys_config_get_device_id();
   int ofs = strlen(deviceId) - 6;
@@ -95,6 +93,5 @@ enum mgos_app_init_result mgos_app_init(void) {
   // Register callback when sys init is complete
   mgos_event_add_handler(MGOS_EVENT_INIT_DONE, sys_ready_cb, thing);
 
-#endif
   return MGOS_APP_INIT_SUCCESS;
 }
