@@ -1,5 +1,6 @@
 #pragma once
-#include "all.h"
+#include <string>
+#include <homie.hpp>
 
 class Thing : public homie::Device {
 
