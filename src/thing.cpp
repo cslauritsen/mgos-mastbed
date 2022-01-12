@@ -1,7 +1,5 @@
 #include "all.h"
 
-
-
 void Thing::updateTempC() { this->tempC = mgos_dht_get_temp(this->dht); }
 
 void Thing::updateRh() { this->rh = mgos_dht_get_humidity(this->dht); }
