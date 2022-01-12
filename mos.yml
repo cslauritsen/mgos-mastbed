@@ -63,11 +63,9 @@ libs:
 # Used by the mos tool to catch mos binaries incompatible with this file format
 manifest_version: 2017-09-29
 
-cflags:
-  - "-Os" # reduce for size
+cflags: []
 
 cxxflags:
-  - "-Os" # reduce for size
   - "-Wall" 
   - "-pedantic" 
   - "-Werror" 
